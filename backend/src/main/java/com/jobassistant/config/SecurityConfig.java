@@ -15,6 +15,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfigurationSource;
+
+import jakarta.servlet.http.HttpServletResponse;
 
 @Configuration
 @EnableWebSecurity
@@ -24,17 +27,42 @@ public class SecurityConfig {
     private final JwtAuthFilter jwtAuthFilter;
     private final CustomUserDetailsService userDetailsService;
 
+    /**
+     * Main security filter chain.
+     *
+     * Key CORS fix: cors(cors -> cors.configurationSource(corsConfigurationSource()))
+     * This tells Spring Security to use OUR CorsConfig bean instead of its
+     * default no-op handler. Without this, Spring Security intercepts the
+     * OPTIONS preflight BEFORE our CorsFilter runs and returns 403 — which
+     * the browser interprets as "no CORS headers" and blocks the request.
+     */
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http,
+                                                    CorsConfigurationSource corsConfigurationSource) throws Exception {
         return http
+                // Disable CSRF — stateless JWT API doesn't need it
                 .csrf(AbstractHttpConfigurer::disable)
-                .cors(cors -> {})
+
+                // Wire in our CorsConfig so Spring Security handles OPTIONS preflights
+                .cors(cors -> cors.configurationSource(corsConfigurationSource))
+
+                // Route permissions
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/auth/**").permitAll()   // login, register
+                        .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll() // all preflight
                         .anyRequest().authenticated()
                 )
+
+                // Return 401 instead of redirect for unauthorized API calls
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((request, response, authException) ->
+                                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized"))
+                )
+
+                // Stateless — no HTTP session
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
