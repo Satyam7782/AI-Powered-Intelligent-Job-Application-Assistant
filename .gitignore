@@ -1,0 +1,23 @@
+# ── Frontend ─────────────────────────────────────────────────────
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/.env.local
+
+# ── Backend ───────────────────────────────────────────────────────
+backend/target/
+backend/uploads/
+backend/*.log
+
+# ── IDE / OS ──────────────────────────────────────────────────────
+.idea/
+*.iml
+.vscode/
+.DS_Store
+Thumbs.db
+
+# ── Java ─────────────────────────────────────────────────────────
+*.class
+*.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
