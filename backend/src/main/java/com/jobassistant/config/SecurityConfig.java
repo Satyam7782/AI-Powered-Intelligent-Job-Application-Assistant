@@ -48,8 +48,9 @@ public class SecurityConfig {
 
                 // Route permissions
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll()   // login, register
-                        .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll() // all preflight
+                        .requestMatchers("/health").permitAll()         // health check
+                        .requestMatchers("/api/auth/**").permitAll()    // login, register
+                        .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                         .anyRequest().authenticated()
                 )
 

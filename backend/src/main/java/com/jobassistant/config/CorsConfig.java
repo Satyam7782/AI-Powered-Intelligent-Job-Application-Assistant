@@ -8,11 +8,6 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
 
-/**
- * Single source of truth for CORS.
- * Spring Security reads this bean via .cors(cors -> cors.configurationSource(...))
- * No separate CorsFilter needed — Spring Security handles preflight automatically.
- */
 @Configuration
 public class CorsConfig {
 
@@ -21,28 +16,18 @@ public class CorsConfig {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
 
-        config.setAllowedOrigins(List.of(
-                // Vercel production URLs
-                "https://frontend-bice-seven-38.vercel.app",
-                "https://frontend-8in1shwg0-satyam7782s-projects.vercel.app",
-                "https://frontend-73fklabl0-satyam7782s-projects.vercel.app",
-                "https://frontend-jsgrtonp3-satyam7782s-projects.vercel.app",
-                // Local dev
-                "http://localhost:5173",
-                "http://localhost:3000"
+        // Use patterns to match ALL Vercel preview + production URLs
+        config.setAllowedOriginPatterns(List.of(
+                "https://*.vercel.app",
+                "https://vercel.app",
+                "http://localhost:*",
+                "http://127.0.0.1:*"
         ));
 
-        config.setAllowedHeaders(List.of(
-                "Origin", "Content-Type", "Accept",
-                "Authorization", "X-Requested-With",
-                "Access-Control-Request-Method",
-                "Access-Control-Request-Headers"
-        ));
-
+        config.setAllowedHeaders(List.of("*"));
         config.setAllowedMethods(List.of(
                 "GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"
         ));
-
         config.setExposedHeaders(List.of("Authorization"));
         config.setMaxAge(3600L);
 
